@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Curanova</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:#0d1520;color:#f0f4f8;font-family:'Playfair Display',serif;overflow-x:hidden}
+:root{--gold:#7dd3fc;--gold2:#bae6fd;--gold-dim:rgba(125,211,252,.15);--blue:#38bdf8;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;--surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.1);--text:rgba(240,244,248,.65)}
+
+/* ── LAYOUT ── */
+#app{min-height:100vh;position:relative}
+.bg-grid{position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:55px 55px;z-index:0}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.orb1{width:550px;height:550px;top:-150px;right:-150px;background:var(--gold);opacity:.12}
+.orb2{width:400px;height:400px;bottom:0;left:-120px;background:var(--blue);opacity:.12}
+
+/* ── TOPBAR ── */
+#topbar{position:relative;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+.logo{display:flex;align-items:center;gap:11px}
+.logo-icon{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0284c7);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 4px 18px rgba(56,189,248,.3);color:#fff}
+.logo-name{font-size:17px;font-weight:700;letter-spacing:.3px;color:#fff}
+.logo-sub{font-family:'DM Sans',sans-serif;font-size:9px;color:rgba(240,244,248,.4);letter-spacing:2px;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.city-badge{font-family:'DM Sans',sans-serif;font-size:12px;background:rgba(125,211,252,.1);border:1px solid rgba(125,211,252,.3);color:var(--gold);padding:4px 12px;border-radius:50px}
+.progress-dots{display:flex;gap:5px;align-items:center}
+.pdot{height:5px;border-radius:3px;background:rgba(255,255,255,.15);transition:all .35s;width:8px}
+.pdot.done{background:rgba(125,211,252,.5)}
+.pdot.active{background:var(--gold);box-shadow:0 0 8px rgba(125,211,252,.5);width:22px}
+.user-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:50px;padding:5px 14px 5px 5px;cursor:pointer;transition:background .2s}
+.user-pill:hover{background:rgba(255,255,255,.1)}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#0284c7);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0d1520;font-family:'DM Sans',sans-serif}
+.user-avatar.admin{background:linear-gradient(135deg,var(--blue),#0369a1)}
+.user-name{font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(240,244,248,.8)}
+.user-logout{font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(240,244,248,.4)}
+.admin-badge{font-family:'DM Sans',sans-serif;font-size:12px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);color:#7dd3fc;padding:4px 12px;border-radius:50px}
+
+/* ── PAGE WRAPPER ── */
+#page{position:relative;z-index:10;padding:50px 32px 90px;width:100%;min-height:calc(100vh - 66px)}
+
+/* ── SCREEN MANAGEMENT ── */
+.screen{display:none;animation:fadeUp .4s cubic-bezier(.22,1,.36,1)}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TYPOGRAPHY ── */
+.dm{font-family:'DM Sans',sans-serif}
+.eyebrow{font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:10px}
+.eyebrow-blue{color:#38bdf8}
+.title{font-size:clamp(28px,4.5vw,50px);font-weight:900;line-height:1.15;margin-bottom:14px;color:#fff}
+.accent{color:var(--gold);font-style:italic}
+.accent-blue{color:#7dd3fc;font-style:italic}
+.subtitle{font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);line-height:1.85}
+.aline{width:48px;height:3px;background:linear-gradient(90deg,var(--gold),#0284c7);border-radius:2px;margin-bottom:22px}
+.aline-blue{width:48px;height:3px;background:linear-gradient(90deg,var(--blue),#0369a1);border-radius:2px;margin-bottom:22px}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.card-pad{padding:22px}
+.card-hover{transition:all .25s;cursor:pointer}
+.card-hover:hover{border-color:rgba(125,211,252,.4);background:rgba(125,211,252,.05);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+
+/* ── BUTTONS ── */
+.btn{background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;border:none;padding:13px 36px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;border-radius:6px;cursor:pointer;transition:all .25s}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 28px rgba(56,189,248,.35)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-full{width:100%;padding:14px;font-size:15px}
+.btn-blue{background:linear-gradient(135deg,var(--blue),#0369a1);color:#fff}
+.btn-outline{background:transparent;color:#fff;border:1.5px solid rgba(125,211,252,.5);padding:11px 28px;font-family:'DM Sans',sans-serif;font-size:14px;border-radius:6px;cursor:pointer;transition:all .2s}
+.btn-outline:hover{background:rgba(125,211,252,.15);border-color:var(--gold)}
+.btn-sm{padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:12px;border-radius:5px;cursor:pointer;border:1px solid;transition:all .2s}
+.btn-map{display:inline-flex;align-items:center;gap:5px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);color:#7dd3fc;padding:6px 13px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;text-decoration:none;transition:all .2s}
+.btn-map:hover{background:rgba(56,189,248,.25)}
+
+/* ── INPUTS ── */
+input,textarea,select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:#fff;padding:11px 15px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:14px;width:100%;outline:none;transition:border-color .2s;-webkit-appearance:none}
+input:focus,textarea:focus,select:focus{border-color:rgba(125,211,252,.6);box-shadow:0 0 0 3px rgba(125,211,252,.1)}
+input::placeholder,textarea::placeholder{color:rgba(240,244,248,.35)}
+input.err{border-color:rgba(239,68,68,.5)!important}
+.err-txt{font-family:'DM Sans',sans-serif;font-size:12px;color:#f87171;margin-top:5px}
+select option{background:#0d1520;color:#fff}
+.label{font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1.5px;color:rgba(240,244,248,.5);margin-bottom:8px;text-transform:uppercase}
+
+/* ── PILLS / CHIPS ── */
+.chip{cursor:pointer;padding:9px 18px;border-radius:50px;border:1.5px solid rgba(125,211,252,.3);background:rgba(125,211,252,.05);color:#bae6fd;font-family:'DM Sans',sans-serif;font-size:13px;transition:all .2s;user-select:none;display:inline-block}
+.chip:hover{border-color:rgba(125,211,252,.6);background:rgba(125,211,252,.12)}
+.chip.on{background:rgba(56,189,248,.2);border-color:var(--gold);color:#fff}
+.city-chip{cursor:pointer;padding:7px 14px;border-radius:50px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:rgba(240,244,248,.7);font-family:'DM Sans',sans-serif;font-size:12px;transition:all .2s;user-select:none;white-space:nowrap;display:inline-block}
+.city-chip:hover{border-color:rgba(125,211,252,.5);background:rgba(125,211,252,.1);color:#fff}
+.sex-pill{cursor:pointer;padding:10px 0;border-radius:6px;text-align:center;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(240,244,248,.6);font-family:'DM Sans',sans-serif;font-size:13px;transition:all .2s;user-select:none;flex:1}
+.sex-pill:hover{border-color:rgba(125,211,252,.4)}
+.sex-pill.on{border-color:var(--gold);background:rgba(125,211,252,.15);color:#fff}
+.tag-h{background:rgba(56,189,248,.15);color:#7dd3fc;border:1px solid rgba(56,189,248,.3);padding:3px 10px;border-radius:50px;font-size:11px;font-family:'DM Sans',sans-serif}
+.tag-d{background:rgba(125,211,252,.15);color:var(--gold);border:1px solid rgba(125,211,252,.3);padding:3px 10px;border-radius:50px;font-size:11px;font-family:'DM Sans',sans-serif}
+.tag-ok{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.3);padding:3px 10px;border-radius:50px;font-size:11px;font-family:'DM Sans',sans-serif}
+
+/* ── ROLE TABS ── */
+.role-tabs{display:flex;gap:8px;margin-bottom:28px;background:rgba(255,255,255,.04);padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,.08)}
+.role-tab{flex:1;padding:12px;text-align:center;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border-radius:7px;transition:all .25s;user-select:none;color:rgba(240,244,248,.5);border:1.5px solid transparent}
+.role-tab:hover{color:rgba(240,244,248,.8)}
+.role-tab.user-active{background:rgba(125,211,252,.18);border-color:rgba(125,211,252,.5);color:#fff}
+.role-tab.admin-active{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.5);color:#7dd3fc}
+
+/* ── ADMIN TABS ── */
+.admin-tab{padding:9px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;border-radius:6px;border:1px solid transparent;color:rgba(240,244,248,.5);transition:all .2s}
+.admin-tab:hover{color:rgba(240,244,248,.85)}
+.admin-tab.on{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.4);color:#7dd3fc}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif}
+.tbl th{font-size:11px;letter-spacing:1.5px;color:rgba(240,244,248,.45);text-transform:uppercase;padding:10px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,.1)}
+.tbl td{font-size:13px;color:rgba(240,244,248,.9);padding:12px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+.tbl tr:hover td{background:rgba(255,255,255,.03)}
+.status-c{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.35);padding:3px 10px;border-radius:50px;font-size:11px}
+.status-p{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.35);padding:3px 10px;border-radius:50px;font-size:11px}
+
+/* ── TOASTS ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast-item{background:rgba(13,21,32,.95);border-radius:10px;padding:14px 18px;max-width:340px;backdrop-filter:blur(10px);display:flex;gap:10px;align-items:flex-start;animation:slideUp .3s ease;border:1px solid}
+.toast-item.success{border-color:rgba(34,197,94,.4)}
+.toast-item.error{border-color:rgba(239,68,68,.4)}
+.toast-item.info{border-color:rgba(125,211,252,.4)}
+.toast-msg{font-family:'DM Sans',sans-serif;font-size:13px;color:#f0f4f8;line-height:1.6;flex:1}
+.toast-close{cursor:pointer;color:rgba(240,244,248,.5);font-size:18px;line-height:1}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PROGRESS BAR ── */
+.prog-bar-bg{background:rgba(255,255,255,.1);border-radius:4px;height:6px;overflow:hidden;margin-bottom:9px}
+.prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--gold));border-radius:4px;transition:width .1s ease}
+
+/* ── MISC ── */
+.chip-wrap{display:flex;flex-wrap:wrap;gap:9px;max-height:280px;overflow-y:auto;padding-right:4px}
+.chip-wrap::-webkit-scrollbar{width:4px}
+.chip-wrap::-webkit-scrollbar-thumb{background:rgba(125,211,252,.3);border-radius:2px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.flex{display:flex}
+.flex-center{display:flex;align-items:center}
+.gap-8{gap:8px}
+.gap-10{gap:10px}
+.gap-12{gap:12px}
+.mb-8{margin-bottom:8px}
+.mb-12{margin-bottom:12px}
+.mb-16{margin-bottom:16px}
+.mb-20{margin-bottom:20px}
+.mb-24{margin-bottom:24px}
+.mb-28{margin-bottom:28px}
+.mb-32{margin-bottom:32px}
+.text-center{text-align:center}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── LOGIN SCREEN ── */
+#screen-login{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;min-height:78vh}
+.login-features{display:flex;flex-direction:column;gap:0}
+.feat-item{display:flex;gap:13px;align-items:flex-start;margin-bottom:14px}
+.feat-icon{width:36px;height:36px;border-radius:8px;background:rgba(125,211,252,.1);border:1px solid rgba(125,211,252,.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.login-card{padding:32px 28px;border-color:rgba(125,211,252,.2)}
+
+/* ── BOOKING SCREEN ── */
+#screen-booking .book-grid{display:grid;grid-template-columns:1.15fr 0.85fr;gap:26px;align-items:start}
+
+/* ── CONFIRMED ── */
+.confirm-circle{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--green),#16a34a);display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 22px;box-shadow:0 8px 32px rgba(34,197,94,.25);color:#fff}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bg-grid"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="logo">
+      <div class="logo-icon">⚕</div>
+      <div>
+        <div class="logo-name">Curanova</div>
+        <div class="logo-sub">All-India · 172 Real Hospitals · Instant Results</div>
+      </div>
+    </div>
+    <div class="topbar-right" id="topbar-right"></div>
+  </div>
+
+  <!-- PAGE -->
+  <div id="page">
+
+    <!-- ══ LOGIN ══ -->
+    <div class="screen active" id="screen-login">
+      <div class="login-features">
+        <div class="aline"></div>
+        <div class="eyebrow">Welcome to</div>
+        <h1 class="title">Curanova<br><span class="accent"></span></h1>
+        <p class="subtitle mb-32">AI-powered symptom analysis connected to <strong style="color:rgba(240,244,248,.85)">22 real hospitals &amp; doctors across Vellore</strong>, for every city and every disease.</p>
+        <div class="login-features">
+          <div class="feat-item"><div class="feat-icon">🔬</div><div><div class="dm" style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">AI Symptom Analysis</div><div class="dm" style="font-size:12px;color:var(--text)">Smart matching across 10 conditions</div></div></div>
+          <div class="feat-item"><div class="feat-icon">🌏</div><div><div class="dm" style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">Vellore Coverage(Trial)</div><div class="dm" style="font-size:12px;color:var(--text)">22 real hospitals in Vellore</div></div></div>
+          <div class="feat-item"><div class="feat-icon">📧</div><div><div class="dm" style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">Email Notifications</div><div class="dm" style="font-size:12px;color:var(--text)">Booking receipt to your Gmail instantly</div></div></div>
+          <div class="feat-item"><div class="feat-icon">🛡</div><div><div class="dm" style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">Admin Dashboard</div><div class="dm" style="font-size:12px;color:var(--text)">Manage all bookings &amp; stats</div></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card login-card">
+          <div class="role-tabs">
+            <div class="role-tab user-active" id="tab-user" onclick="switchRole('user')">👤 User Login</div>
+            <div class="role-tab" id="tab-admin" onclick="switchRole('admin')">🛡 Admin Login</div>
+          </div>
+          <!-- User form -->
+          <div id="form-user">
+            <div style="font-size:21px;font-weight:700;margin-bottom:5px;color:#fff">Create your profile</div>
+            <div class="dm mb-20" style="font-size:13px;color:var(--text);line-height:1.6">Your info helps personalise recommendations and notifies the admin.</div>
+            <div class="mb-16">
+              <div class="label">Full Name</div>
+              <input id="inp-name" placeholder="e.g. Ravi Kumar" onkeydown="if(event.key==='Enter')doLogin()"/>
+              <div class="err-txt" id="err-name" style="display:none"></div>
+            </div>
+            <div class="mb-16">
+              <div class="label">Mobile Number</div>
+              <div style="position:relative">
+                <span class="dm" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;color:rgba(240,244,248,.4);pointer-events:none">+91</span>
+                <input id="inp-mobile" style="padding-left:42px" placeholder="9XXXXXXXXX" maxlength="10" oninput="this.value=this.value.replace(/\D/,'')" onkeydown="if(event.key==='Enter')doLogin()"/>
+              </div>
+              <div class="err-txt" id="err-mobile" style="display:none"></div>
+            </div>
+            <div class="grid-2 mb-20">
+              <div>
+                <div class="label">Age</div>
+                <input id="inp-age" type="number" min="1" max="120" placeholder="e.g. 28"/>
+                <div class="err-txt" id="err-age" style="display:none"></div>
+              </div>
+              <div>
+                <div class="label">Sex</div>
+                <div style="display:flex;gap:6px" id="sex-btns">
+                  <div class="sex-pill" onclick="selectSex('Male')">♂<br><span style="font-size:11px">Male</span></div>
+                  <div class="sex-pill" onclick="selectSex('Female')">♀<br><span style="font-size:11px">Female</span></div>
+                  <div class="sex-pill" onclick="selectSex('Other')">⚧<br><span style="font-size:11px">Other</span></div>
+                </div>
+                <div class="err-txt" id="err-sex" style="display:none"></div>
+              </div>
+            </div>
+            <button class="btn btn-full" onclick="doLogin()">Get Started →</button>
+            <div style="background:rgba(125,211,252,.08);border:1px solid rgba(125,211,252,.25);border-radius:8px;padding:12px 16px;margin-top:12px;display:flex;align-items:center;gap:8px">
+              <span style="font-size:16px">📧</span>
+              <div class="dm" style="font-size:12px;color:var(--text);line-height:1.6">Signup &amp; booking details will be emailed to <strong style="color:var(--gold)">pranav27062007@gmail.com</strong></div>
+            </div>
+          </div>
+          <!-- Admin form -->
+          <div id="form-admin" style="display:none">
+            <div style="text-align:center;margin-bottom:24px">
+              <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(56,189,248,.2),rgba(3,105,161,.3));border:1.5px solid rgba(125,211,252,.4);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px">🛡</div>
+              <div style="font-size:21px;font-weight:700;margin-bottom:4px;color:#fff">Admin Access</div>
+              <div class="dm" style="font-size:13px;color:var(--text);line-height:1.6">Restricted to authorised personnel only.</div>
+            </div>
+            <div class="mb-16">
+              <div class="label">Admin Mobile Number</div>
+              <div style="position:relative">
+                <span class="dm" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;color:rgba(240,244,248,.4);pointer-events:none">+91</span>
+                <input id="inp-admin-mob" style="padding-left:42px" placeholder="Enter authorised number" maxlength="10" type="tel" oninput="this.value=this.value.replace(/\D/,'')" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+              </div>
+              <div id="err-admin" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:10px 14px;margin-top:10px">
+                <span>🔒</span> <span class="dm" style="font-size:12px;color:#f87171"></span>
+              </div>
+            </div>
+            <button class="btn btn-full btn-blue" onclick="doAdminLogin()">Access Admin Panel →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LOCATION ══ -->
+    <div class="screen" id="screen-location" style="max-width:580px;margin:0 auto;padding-top:16px">
+      <div class="text-center mb-32">
+        <div style="font-size:56px;margin-bottom:14px">🌏</div>
+        <div class="eyebrow">Step 01 / Your City</div>
+        <h2 class="title">Hello, <span class="accent" id="loc-name"></span>!<br>Which city are you in?</h2>
+        <p class="subtitle">172 real hospitals across India. We'll show the right ones for your city.</p>
+      </div>
+      <div id="city-input-wrap">
+        <div style="position:relative;margin-bottom:12px">
+          <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none">📍</span>
+          <input id="inp-city" style="padding-left:50px;font-size:16px;border-radius:8px;border:2px solid rgba(125,211,252,.3);background:rgba(255,255,255,.05)" placeholder="Type your city – Mumbai, Delhi, Chennai…" onkeydown="if(event.key==='Enter')confirmCity()"/>
+        </div>
+        <button class="btn btn-full" id="btn-city-confirm" onclick="confirmCity()">Search Doctors →</button>
+        <div class="dm mb-12 mt-16" style="font-size:11px;color:rgba(240,244,248,.35);letter-spacing:1px;text-align:center;margin-top:16px">OR PICK A CITY</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center" id="city-chips"></div>
+      </div>
+      <div id="city-confirmed-wrap" style="display:none">
+        <div class="card mb-20" style="padding:16px 20px;border-color:rgba(34,197,94,.22);background:rgba(34,197,94,.05)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:24px">✅</span>
+            <div>
+              <div class="dm" style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:2px">City confirmed</div>
+              <div class="dm" style="font-size:14px;color:rgba(240,244,248,.7)">Finding doctors in <strong style="color:#fff" id="city-confirm-name"></strong></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn" style="flex:1;padding:13px" onclick="goToSymptoms()">Continue to Symptom Check →</button>
+          <button class="btn-outline" style="padding:13px 20px" onclick="resetCity()">Change</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SYMPTOMS ══ -->
+    <div class="screen" id="screen-symptoms">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap">
+        <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(125,211,252,.1);border:1px solid rgba(125,211,252,.25);border-radius:50px;padding:5px 14px;cursor:pointer" onclick="goToCity()">
+          <span style="font-size:12px">📍</span><span class="dm" style="font-size:12px;color:var(--gold)" id="sym-city"></span><span class="dm" style="font-size:11px;color:rgba(125,211,252,.5)">· Change</span>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:50px;padding:5px 14px">
+          <span class="dm" style="font-size:12px;color:rgba(240,244,248,.6)" id="sym-profile"></span>
+        </div>
+      </div>
+      <div class="mb-28">
+        <div class="eyebrow">Step 02 / Symptoms</div>
+        <h1 class="title">What are you<br><span class="accent">experiencing</span> today?</h1>
+        <p class="subtitle" style="max-width:520px">Select all symptoms. We'll show the best doctors in <strong style="color:rgba(240,244,248,.8)" id="sym-city2"></strong>.</p>
+      </div>
+      <div class="chip-wrap mb-28" id="symptom-chips"></div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <button class="btn" id="btn-analyze" onclick="analyze()" disabled>Find Doctors →</button>
+        <span class="dm" style="font-size:13px;color:rgba(240,244,248,.4)" id="sym-count">Select at least one symptom</span>
+      </div>
+    </div>
+
+    <!-- ══ ANALYZING ══ -->
+    <div class="screen" id="screen-analyzing" style="text-align:center;padding-top:56px">
+      <div style="font-size:68px;margin-bottom:20px" class="pulse">🔬</div>
+      <h2 style="font-size:30px;margin-bottom:12px;color:#fff">Analyzing symptoms</h2>
+      <p class="dm" style="color:var(--text);margin-bottom:40px;font-size:15px">Matching symptoms · Locating doctors in <strong style="color:var(--gold)" id="ana-city"></strong></p>
+      <div style="max-width:360px;margin:0 auto">
+        <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-fill" style="width:0%"></div></div>
+        <div class="dm" style="font-size:12px;color:rgba(240,244,248,.4)" id="prog-pct">0%</div>
+      </div>
+      <div style="margin-top:32px;display:flex;gap:24px;justify-content:center;flex-wrap:wrap" id="ana-steps"></div>
+    </div>
+
+    <!-- ══ RESULT ══ -->
+    <div class="screen" id="screen-result">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(125,211,252,.1);border:1px solid rgba(125,211,252,.25);border-radius:50px;padding:5px 14px;cursor:pointer" onclick="goToCity()">
+          <span style="font-size:12px">📍</span><span class="dm" style="font-size:12px;color:var(--gold)" id="res-city"></span><span class="dm" style="font-size:11px;color:rgba(125,211,252,.5)">· Change city</span>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:50px;padding:5px 14px">
+          <span class="dm" style="font-size:12px;color:rgba(240,244,248,.6)" id="res-profile"></span>
+        </div>
+      </div>
+      <div class="eyebrow mb-16">Step 03 / Diagnosis &amp; Providers</div>
+      <div class="card card-pad mb-24" id="dx-card" style="border-color:rgba(125,211,252,.2)"></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:6px;align-items:center">
+        <div class="dm" style="font-size:11px;letter-spacing:2px;color:rgba(240,244,248,.4)" id="prov-count"></div>
+        <div class="dm" style="font-size:12px;color:rgba(240,244,248,.5)" id="prov-city-label"></div>
+      </div>
+      <div class="grid-auto mb-28" id="provider-cards"></div>
+      <button class="btn-outline" onclick="goBack('symptoms')">← Change Symptoms</button>
+      <div class="card" style="padding:11px 15px;margin-top:14px;border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.05)">
+        <p class="dm" style="font-size:12px;color:rgba(240,244,248,.5);line-height:1.6">⚠️ <strong style="color:rgba(240,244,248,.7)">Disclaimer:</strong> AI guidance only, not a medical diagnosis. Always call the provider to confirm availability before visiting.</p>
+      </div>
+    </div>
+
+    <!-- ══ BOOKING ══ -->
+    <div class="screen" id="screen-booking">
+      <div class="eyebrow mb-16">Step 04 / Book Appointment</div>
+      <div class="book-grid">
+        <div>
+          <h2 style="font-size:26px;margin-bottom:6px;color:#fff">Confirm your<br><span class="accent">appointment</span></h2>
+          <p class="dm mb-20" style="color:var(--text);font-size:14px;line-height:1.75">Your profile details are pre-filled. Choose a date and time.</p>
+          <div class="card mb-16" style="padding:15px" id="book-prov-card"></div>
+          <div class="card mb-16" style="padding:13px 15px;background:rgba(125,211,252,.05);border-color:rgba(125,211,252,.2)">
+            <div class="label mb-8" style="color:rgba(125,211,252,.8)">Patient Info (Pre-filled)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" id="book-patient-info"></div>
+          </div>
+          <div class="grid-2 mb-12">
+            <div><div class="label">Preferred Date</div><input type="date" id="inp-date"/></div>
+            <div>
+              <div class="label">Preferred Time</div>
+              <select id="inp-time">
+                <option value="">Select time</option>
+                <option>9:00 AM</option><option>10:00 AM</option><option>11:00 AM</option>
+                <option>12:00 PM</option><option>2:00 PM</option><option>3:00 PM</option>
+                <option>4:00 PM</option><option>5:00 PM</option><option>6:00 PM</option><option>7:00 PM</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-16"><div class="label">Notes for Doctor (optional)</div><textarea id="inp-note" rows="3" placeholder="Medications, allergies, or anything the doctor should know…" style="resize:none"></textarea></div>
+          <div style="display:flex;gap:11px">
+            <button class="btn" id="btn-confirm-book" onclick="confirmBooking()">Confirm Booking</button>
+            <button class="btn-outline" onclick="goBack('result')">← Back</button>
+          </div>
+        </div>
+        <div>
+          <div class="card mb-12" style="padding:18px" id="book-summary"></div>
+          <div class="card" style="padding:13px;background:rgba(34,197,94,.03);border-color:rgba(34,197,94,.12)">
+            <p class="dm" style="font-size:12px;color:rgba(240,244,248,.5);line-height:1.75">📞 <strong style="color:rgba(240,244,248,.7)">Tip:</strong> Call ahead to confirm your slot — walk-in availability varies.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONFIRMED ══ -->
+    <div class="screen" id="screen-confirmed" style="text-align:center;padding-top:28px">
+      <div class="confirm-circle">✓</div>
+      <h2 style="font-size:34px;margin-bottom:9px;color:#fff">Appointment Requested!</h2>
+      <p class="dm" style="color:var(--text);font-size:15px;line-height:1.85;max-width:450px;margin:0 auto 32px">Request sent for <strong style="color:#fff" id="conf-prov"></strong>.<br>Please call ahead to confirm your slot.</p>
+      <div class="card" style="display:inline-block;padding:24px 34px;margin-bottom:28px;text-align:left;min-width:320px;border-color:rgba(125,211,252,.2)">
+        <div class="eyebrow mb-12">Booking Receipt</div>
+        <div id="conf-receipt"></div>
+      </div>
+      <div style="display:flex;gap:11px;justify-content:center;flex-wrap:wrap">
+        <a id="conf-map-link" href="#" target="_blank" class="btn-map" style="padding:12px 22px;font-size:14px">🗺 Get Directions</a>
+        <button class="btn" onclick="resetAll()">Start a New Check</button>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN ══ -->
+    <div class="screen" id="screen-admin">
+      <div class="mb-32">
+        <div class="aline-blue"></div>
+        <div class="eyebrow eyebrow-blue">Admin Panel</div>
+        <h1 class="title">Welcome back, <span class="accent-blue">Pranav</span></h1>
+        <div class="dm" style="font-size:14px;color:var(--text)">All bookings &amp; statistics for Curanova India.</div>
+      </div>
+      <div class="grid-4 mb-28" id="admin-stats"></div>
+      <div style="display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:16px">
+        <div class="admin-tab on" id="atab-bookings" onclick="switchAdminTab('bookings')">📋 Bookings</div>
+        <div class="admin-tab" id="atab-stats" onclick="switchAdminTab('stats')">📊 Stats</div>
+      </div>
+      <div id="admin-bookings-view"></div>
+      <div id="admin-stats-view" style="display:none"></div>
+    </div>
+
+  </div><!-- /page -->
+</div><!-- /app -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════════════════
+const ADMIN_MOBILE = "8050200772";
+const EJ_SERVICE   = "curanova_service";
+const EJ_TEMPLATE  = "template_r1m4qeg";
+const EJ_KEY       = "lyRiGlr-Vn3_pxHjE";
+
+const DISEASE_MAP = [
+  { disease:"COVID-19",          icon:"🦠", severity:"moderate", specialty:"Infectious Disease",   symptoms:["Fever","Cough","Fatigue","Loss of Taste/Smell","Shortness of Breath","Muscle Aches"], description:"A viral respiratory illness caused by SARS-CoV-2." },
+  { disease:"Common Cold",       icon:"🤧", severity:"mild",     specialty:"General Practice",     symptoms:["Runny Nose","Sore Throat","Cough","Headache","Fatigue"],                              description:"A mild viral infection of the upper respiratory tract." },
+  { disease:"Influenza",         icon:"🌡️", severity:"moderate", specialty:"General Practice",     symptoms:["Fever","Muscle Aches","Fatigue","Headache","Cough","Sore Throat"],                   description:"A contagious respiratory illness caused by influenza viruses." },
+  { disease:"Gastroenteritis",   icon:"🤢", severity:"moderate", specialty:"Gastroenterology",     symptoms:["Nausea","Vomiting","Diarrhea","Abdominal Pain","Fever"],                            description:"Inflammation of the stomach and intestines, often from infection." },
+  { disease:"Migraine",          icon:"🧠", severity:"moderate", specialty:"Neurology",            symptoms:["Headache","Nausea","Dizziness","Fatigue"],                                          description:"A neurological condition causing intense, debilitating headaches." },
+  { disease:"Pneumonia",         icon:"🫁", severity:"severe",   specialty:"Pulmonology",          symptoms:["Fever","Cough","Shortness of Breath","Chest Pain","Fatigue"],                       description:"Infection that inflames the air sacs in one or both lungs." },
+  { disease:"Allergic Reaction", icon:"🌸", severity:"mild",     specialty:"Allergy & Immunology", symptoms:["Skin Rash","Runny Nose","Shortness of Breath","Swollen Lymph Nodes"],              description:"An immune system response to a foreign substance." },
+  { disease:"Arthritis",         icon:"🦴", severity:"chronic",  specialty:"Rheumatology",         symptoms:["Joint Pain","Fatigue","Swollen Lymph Nodes","Back Pain"],                          description:"Inflammation of one or more joints causing pain and stiffness." },
+  { disease:"Cardiac Issue",     icon:"❤️", severity:"severe",   specialty:"Cardiology",           symptoms:["Chest Pain","Shortness of Breath","Dizziness","Fatigue","Nausea"],                 description:"Conditions affecting the heart's structure or function." },
+  { disease:"Dengue Fever",      icon:"🦟", severity:"severe",   specialty:"Infectious Disease",   symptoms:["Fever","Headache","Joint Pain","Muscle Aches","Skin Rash","Fatigue"],               description:"A mosquito-borne tropical disease caused by dengue viruses." },
+];
+
+const SYMPTOMS = ["Fever","Cough","Headache","Fatigue","Sore Throat","Shortness of Breath","Chest Pain","Nausea","Vomiting","Diarrhea","Abdominal Pain","Back Pain","Joint Pain","Skin Rash","Runny Nose","Loss of Taste/Smell","Dizziness","Muscle Aches","Swollen Lymph Nodes","Night Sweats"];
+const POPULAR_CITIES = ["Mumbai","Delhi","Bangalore","Chennai","Hyderabad","Kolkata","Pune","Ahmedabad","Vellore","Kochi","Jaipur","Lucknow","Coimbatore","Visakhapatnam","Nagpur","Indore","Surat","Chandigarh","Patna","Bhopal"];
+const SEV_COLOR = { mild:"#22c55e", moderate:"#f59e0b", severe:"#ef4444", chronic:"#8b5cf6" };
+
+const PROVIDERS = {
+  "General Practice":{
+    vellore:[{name:"A P Clinic Family Health Care",subtitle:"Dr. Vasanth Raj · General Medicine",rating:4.9,reviews:86,address:"No 503, 17th Cross Rd, Sathuvachari, Vellore 632009",hours:"Mon–Sun: 8 AM–1 PM & 5–9 PM",type:"doctor",map:"https://maps.google.com/?q=AP+Clinic+Sathuvachari+Vellore"},{name:"Naruvi Hospitals",subtitle:"Multi-Speciality · 24/7 Emergency",rating:4.6,reviews:5290,address:"72, Collector's Office Rd, Thottapalayam, Vellore 632004",hours:"Open 24 Hours, 7 Days",type:"hospital",map:"https://maps.google.com/?q=Naruvi+Hospitals+Vellore"},{name:"CMC Vellore – General Medicine",subtitle:"Christian Medical College · 24/7",rating:4.7,reviews:892,address:"IDA Scudder Rd, Vellore 632004",hours:"Open 24 Hours, 7 Days",type:"hospital",map:"https://maps.google.com/?q=CMC+Hospital+Vellore"}],
+    chennai:[{name:"Apollo Hospitals",subtitle:"Super Speciality · 24/7",rating:4.7,reviews:55315,address:"21 Greams Rd, Thousand Lights, Chennai 600006",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Chennai"},{name:"SIMS Hospital",subtitle:"Saveetha Medical College · 24/7",rating:4.7,reviews:18638,address:"1 JN Salai, Vadapalani, Chennai 600026",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=SIMS+Hospital+Chennai"},{name:"Dr. Mehta's Hospitals",subtitle:"Multi-Speciality · 24/7",rating:4.6,reviews:10201,address:"2 McNichols Rd, Chetpet, Chennai 600031",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Dr+Mehta+Hospitals+Chennai"}],
+    bangalore:[{name:"Manipal Hospital",subtitle:"Super Speciality · 24/7",rating:4.6,reviews:42000,address:"98, HAL Old Airport Rd, Kodihalli, Bangalore 560017",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Manipal+Hospital+Bangalore"},{name:"Fortis Hospital Bangalore",subtitle:"Multi-Speciality · 24/7",rating:4.5,reviews:28000,address:"154/9, Bannerghatta Rd, Bangalore 560076",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Fortis+Hospital+Bangalore"},{name:"Aster CMI Hospital",subtitle:"General & Speciality Care · 24/7",rating:4.6,reviews:12000,address:"43/2 New Airport Rd, Hebbal, Bangalore 560092",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Aster+CMI+Hospital+Bangalore"}],
+    mumbai:[{name:"Lilavati Hospital",subtitle:"Super Speciality · 24/7",rating:4.5,reviews:31000,address:"A-791, Bandra Reclamation, Bandra West, Mumbai 400050",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Lilavati+Hospital+Mumbai"},{name:"Kokilaben Dhirubhai Ambani",subtitle:"Super Speciality · 24/7",rating:4.7,reviews:24000,address:"Four Bungalows, Andheri West, Mumbai 400053",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Kokilaben+Hospital+Mumbai"},{name:"PD Hinduja Hospital",subtitle:"Multi-Speciality · 24/7",rating:4.5,reviews:18000,address:"Veer Savarkar Marg, Mahim, Mumbai 400016",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Hinduja+Hospital+Mumbai"}],
+    delhi:[{name:"AIIMS Delhi",subtitle:"Premier Government Hospital",rating:4.5,reviews:65000,address:"Sri Aurobindo Marg, Ansari Nagar, New Delhi 110029",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=AIIMS+Delhi"},{name:"Max Super Speciality",subtitle:"Multi-Speciality · 24/7",rating:4.6,reviews:35000,address:"1, Press Enclave Marg, Saket, New Delhi 110017",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Max+Hospital+Saket+Delhi"},{name:"Sir Ganga Ram Hospital",subtitle:"Multi-Speciality · 24/7",rating:4.6,reviews:29000,address:"Rajinder Nagar, New Delhi 110060",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Sir+Ganga+Ram+Hospital+Delhi"}],
+    hyderabad:[{name:"Apollo Hospitals Hyderabad",subtitle:"Super Speciality · 24/7",rating:4.6,reviews:38000,address:"Jubilee Hills, Hyderabad 500033",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Hyderabad"},{name:"Yashoda Hospital",subtitle:"Multi-Speciality · 24/7",rating:4.5,reviews:20000,address:"Raj Bhavan Rd, Somajiguda, Hyderabad 500082",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Yashoda+Hospital+Hyderabad"},{name:"KIMS Hospital",subtitle:"Krishna Institute of Medical Sci",rating:4.4,reviews:28000,address:"Minister Rd, Secunderabad 500003",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=KIMS+Hospital+Hyderabad"}],
+    kolkata:[{name:"Apollo Gleneagles Hospital",subtitle:"Super Speciality · 24/7",rating:4.5,reviews:21000,address:"58, Canal Circular Rd, Kadapara, Kolkata 700054",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Gleneagles+Hospital+Kolkata"},{name:"Fortis Hospital Kolkata",subtitle:"Multi-Speciality · 24/7",rating:4.4,reviews:16000,address:"730, Eastern Metropolitan Bypass, Kolkata 700107",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Fortis+Hospital+Kolkata"},{name:"AMRI Hospital",subtitle:"Advanced Medical Research",rating:4.4,reviews:13000,address:"P-4&5, CIT Scheme, Gariahat Rd South, Kolkata 700029",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=AMRI+Hospital+Kolkata"}],
+    pune:[{name:"Ruby Hall Clinic",subtitle:"Multi-Speciality · 24/7",rating:4.5,reviews:19000,address:"40, Sassoon Rd, Sangamvadi, Pune 411001",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Ruby+Hall+Clinic+Pune"},{name:"Deenanath Mangeshkar",subtitle:"Multi-Speciality · 24/7",rating:4.6,reviews:16000,address:"Erandwane, Pune 411004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Deenanath+Mangeshkar+Hospital+Pune"}],
+    ahmedabad:[{name:"Apollo Hospitals Ahmedabad",subtitle:"Super Speciality · 24/7",rating:4.5,reviews:17000,address:"Plot No. 1A, BHAT GIDC, Gandhinagar 382428",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospital+Ahmedabad"},{name:"Sterling Hospital",subtitle:"Multi-Speciality · 24/7",rating:4.3,reviews:12000,address:"Memnagar, Ahmedabad 380052",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Sterling+Hospital+Ahmedabad"}],
+    kochi:[{name:"Amrita Institute of Medical Sciences",subtitle:"Super Speciality · 24/7",rating:4.7,reviews:22000,address:"AIMS Ponekkara, Ernakulam, Kochi 682041",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Amrita+Institute+Kochi"},{name:"Aster Medcity",subtitle:"Super Speciality · 24/7",rating:4.6,reviews:19000,address:"Kuttisahib Rd, Cheranalloor, Kochi 682027",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Aster+Medcity+Kochi"}],
+    jaipur:[{name:"Fortis Escorts Hospital Jaipur",subtitle:"Super Speciality · 24/7",rating:4.5,reviews:14000,address:"JL Nehru Marg, Malviya Nagar, Jaipur 302017",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Fortis+Escorts+Hospital+Jaipur"},{name:"Sawai Man Singh Hospital",subtitle:"Government · Multi-Speciality",rating:4.0,reviews:18000,address:"J.L.N. Marg, Jaipur 302004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=SMS+Hospital+Jaipur"}],
+    lucknow:[{name:"SGPGI Lucknow",subtitle:"Government Super Speciality",rating:4.4,reviews:21000,address:"Raebareli Rd, Lucknow 226014",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=SGPGI+Lucknow"},{name:"Medanta Hospital Lucknow",subtitle:"Multi-Speciality · 24/7",rating:4.6,reviews:9000,address:"Sector A, Golf City, Lucknow 226030",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Medanta+Hospital+Lucknow"}],
+    coimbatore:[{name:"PSG Hospitals",subtitle:"Multi-Speciality · 24/7",rating:4.5,reviews:16000,address:"Peelamedu, Avinashi Rd, Coimbatore 641004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=PSG+Hospital+Coimbatore"},{name:"Kovai Medical Center",subtitle:"Multi-Speciality · 24/7",rating:4.6,reviews:18000,address:"99, Avinashi Rd, Coimbatore 641014",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Kovai+Medical+Center+Coimbatore"}],
+    nagpur:[{name:"Orange City Hospital",subtitle:"Multi-Speciality · 24/7",rating:4.5,reviews:10000,address:"Nagpur",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Orange+City+Hospital+Nagpur"}],
+    chandigarh:[{name:"PGIMER Chandigarh",subtitle:"Premier Government Hospital",rating:4.5,reviews:32000,address:"Sector 12, Chandigarh 160012",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=PGIMER+Chandigarh"}],
+    patna:[{name:"Paras HMRI Hospital",subtitle:"Multi-Speciality · 24/7",rating:4.4,reviews:9000,address:"Raja Bazar, Patna 800014",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Paras+HMRI+Hospital+Patna"}],
+    indore:[{name:"Bombay Hospital Indore",subtitle:"Multi-Speciality · 24/7",rating:4.5,reviews:12000,address:"Ring Rd, Indore 452010",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Bombay+Hospital+Indore"}],
+    surat:[{name:"Kiran Multi Super Speciality Hospital",subtitle:"Super Speciality · 24/7",rating:4.5,reviews:11000,address:"Surat",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Kiran+Hospital+Surat"}],
+    bhopal:[{name:"Hamidia Hospital",subtitle:"Government · Multi-Speciality",rating:4.0,reviews:16000,address:"Royal Market, Sultania Rd, Bhopal 462001",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Hamidia+Hospital+Bhopal"}],
+    visakhapatnam:[{name:"Apollo Hospitals Vizag",subtitle:"Super Speciality · 24/7",rating:4.5,reviews:14000,address:"Waltair Main Rd, Visakhapatnam 530002",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Visakhapatnam"}],
+  },
+  "Cardiology":{
+    vellore:[{name:"CMC Vellore – Cardiology",subtitle:"World-class Cardiac Care",rating:4.8,reviews:892,address:"IDA Scudder Rd, Vellore 632004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=CMC+Hospital+Vellore"},{name:"Naruvi Hospitals – Cardiac",subtitle:"24/7 Emergency Cardiology",rating:4.6,reviews:5290,address:"72, Collector's Office Rd, Vellore 632004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Naruvi+Hospitals+Vellore"}],
+    chennai:[{name:"Apollo Heart Centre",subtitle:"Dedicated Cardiac Hospital",rating:4.8,reviews:14200,address:"Shafee Mohammed Rd, Chennai 600006",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Heart+Centre+Chennai"},{name:"Frontier Lifeline Hospital",subtitle:"Dr. K.M. Cherian's Cardiac Ctr",rating:4.7,reviews:8900,address:"Ambattur Industrial Estate Rd, Chennai 600101",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Frontier+Lifeline+Hospital+Chennai"},{name:"MIOT International – Cardiology",subtitle:"Cardiac Sciences Dept",rating:4.6,reviews:19000,address:"Mount Poonamallee Rd, Chennai 600089",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=MIOT+International+Chennai"}],
+    bangalore:[{name:"Narayana Health City",subtitle:"India's Largest Heart Hospital",rating:4.8,reviews:32000,address:"258/A, Bommasandra, Anekal Taluk, Bangalore 560099",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Narayana+Health+Bangalore"},{name:"Sri Jayadeva Cardiovascular Inst",subtitle:"Premier Govt Cardiac Hospital",rating:4.6,reviews:28000,address:"Bannerghatta Rd, Jayanagar, Bangalore 560069",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Sri+Jayadeva+Institute+Bangalore"}],
+    mumbai:[{name:"Asian Heart Institute",subtitle:"Dedicated Cardiac Hospital",rating:4.7,reviews:22000,address:"G/N Block, Bandra Kurla Complex, Mumbai 400051",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Asian+Heart+Institute+Mumbai"},{name:"Breach Candy Hospital – Cardiology",subtitle:"Cardiology & Cardiac Surgery",rating:4.5,reviews:11000,address:"60A, Bhulabhai Desai Rd, Mumbai 400026",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Breach+Candy+Hospital+Mumbai"}],
+    delhi:[{name:"Fortis Escorts Heart Institute",subtitle:"Premier Cardiac Hospital",rating:4.7,reviews:29000,address:"Okhla Rd, New Delhi 110025",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Fortis+Escorts+Heart+Institute+Delhi"},{name:"Medanta – Heart Institute",subtitle:"World Class Cardiac Care",rating:4.7,reviews:31000,address:"CH Baktawar Singh Rd, Gurugram 122001",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Medanta+Hospital+Gurugram"},{name:"AIIMS – Cardiothoracic Centre",subtitle:"Govt Premier Cardiac Care",rating:4.7,reviews:18000,address:"Sri Aurobindo Marg, New Delhi 110029",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=AIIMS+Delhi"}],
+    hyderabad:[{name:"CARE Hospitals – Cardiology",subtitle:"Cardiac Sciences Dept",rating:4.6,reviews:21000,address:"Exhibition Rd, Nampally, Hyderabad 500001",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=CARE+Hospitals+Hyderabad"},{name:"Star Hospital – Cardiology",subtitle:"Cardiac Sciences",rating:4.5,reviews:14000,address:"Road No. 10, Banjara Hills, Hyderabad 500034",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Star+Hospitals+Hyderabad"}],
+    kolkata:[{name:"B.M. Birla Heart Research Centre",subtitle:"Dedicated Cardiac Hospital",rating:4.6,reviews:12000,address:"1/1 National Library Ave, Alipore, Kolkata 700027",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=BM+Birla+Heart+Research+Centre+Kolkata"}],
+    pune:[{name:"Deenanath Mangeshkar – Cardiology",subtitle:"Cardiac Sciences Dept",rating:4.6,reviews:16000,address:"Erandwane, Pune 411004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Deenanath+Mangeshkar+Hospital+Pune"}],
+    ahmedabad:[{name:"UN Mehta Heart Hospital",subtitle:"Govt Premier Cardiac Hospital",rating:4.6,reviews:11000,address:"Civil Hospital Campus, Asarwa, Ahmedabad 380016",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=UN+Mehta+Heart+Hospital+Ahmedabad"}],
+  },
+  "Neurology":{
+    vellore:[{name:"Shine Neuro & Spine Centre",subtitle:"Dr. Sangeetha J · Neurologist",rating:4.8,reviews:345,address:"19, Thennamara St, Kosapet, Vellore 632001",hours:"Mon–Sat: 9 AM–6 PM",type:"doctor",map:"https://maps.google.com/?q=Shine+Neuro+Spine+Centre+Vellore"},{name:"CMC Vellore – Neurosciences",subtitle:"Neurology & Neurosurgery Dept",rating:4.8,reviews:892,address:"IDA Scudder Rd, Vellore 632004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=CMC+Hospital+Vellore"}],
+    chennai:[{name:"Apollo Hospitals – Neurosciences",subtitle:"Comprehensive Neuro Centre",rating:4.7,reviews:55315,address:"21 Greams Rd, Chennai 600006",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Chennai"},{name:"MGM Healthcare – Neurosciences",subtitle:"Advanced Neuro & Spine",rating:4.6,reviews:8700,address:"Nelson Manickam Rd, Aminjikarai, Chennai 600029",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=MGM+Healthcare+Chennai"}],
+    bangalore:[{name:"NIMHANS",subtitle:"National Neuro Sciences Institute",rating:4.6,reviews:14000,address:"Hosur Rd, Wilson Garden, Bangalore 560029",hours:"Mon–Sat: 8 AM–4 PM",type:"hospital",map:"https://maps.google.com/?q=NIMHANS+Bangalore"},{name:"Aster CMI – Neurosciences",subtitle:"Advanced Neuro & Spine",rating:4.6,reviews:12000,address:"New Airport Rd, Hebbal, Bangalore 560092",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Aster+CMI+Hospital+Bangalore"}],
+    mumbai:[{name:"Kokilaben – Neurosciences",subtitle:"Advanced Neuro Dept",rating:4.7,reviews:24000,address:"Andheri West, Mumbai 400053",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Kokilaben+Hospital+Mumbai"},{name:"Wockhardt Hospital – Neuro",subtitle:"Neuro Sciences Centre",rating:4.6,reviews:11000,address:"Dr Anandrao Nair Marg, Mumbai 400011",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Wockhardt+Hospital+Mumbai"}],
+    delhi:[{name:"AIIMS – Neurology",subtitle:"Premier Neuro Centre",rating:4.7,reviews:18000,address:"Sri Aurobindo Marg, New Delhi 110029",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=AIIMS+Delhi"},{name:"Medanta – Neurosciences",subtitle:"World Class Neuro Care",rating:4.7,reviews:31000,address:"CH Baktawar Singh Rd, Gurugram 122001",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Medanta+Hospital+Gurugram"}],
+    hyderabad:[{name:"KIMS Hospital – Neurology",subtitle:"Neuro & Spine Sciences",rating:4.5,reviews:28000,address:"Minister Rd, Secunderabad 500003",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=KIMS+Hospital+Hyderabad"}],
+  },
+  "Gastroenterology":{
+    vellore:[{name:"CMC Vellore – GI Dept",subtitle:"Gastroenterology & GI Surgery",rating:4.8,reviews:892,address:"IDA Scudder Rd, Vellore 632004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=CMC+Hospital+Vellore"}],
+    chennai:[{name:"SIMS Hospital – GI Sciences",subtitle:"Advanced GI & Liver Sciences",rating:4.7,reviews:18638,address:"1 JN Salai, Vadapalani, Chennai 600026",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=SIMS+Hospital+Chennai"},{name:"Gleneagles Global Health City",subtitle:"GI & HPB Surgery",rating:4.6,reviews:19000,address:"Cheran Nagar, Perumbakkam, Chennai 600100",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Gleneagles+Global+Health+City+Chennai"}],
+    bangalore:[{name:"Manipal Hospital – GI",subtitle:"GI Sciences Dept",rating:4.6,reviews:42000,address:"HAL Old Airport Rd, Bangalore 560017",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Manipal+Hospital+Bangalore"}],
+    mumbai:[{name:"Lilavati Hospital – GI",subtitle:"Gastroenterology Dept",rating:4.5,reviews:31000,address:"Bandra West, Mumbai 400050",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Lilavati+Hospital+Mumbai"}],
+    delhi:[{name:"Sir Ganga Ram – GI Dept",subtitle:"Gastroenterology",rating:4.6,reviews:29000,address:"Rajinder Nagar, New Delhi 110060",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Sir+Ganga+Ram+Hospital+Delhi"},{name:"Medanta – GI Sciences",subtitle:"Advanced GI & Liver Sciences",rating:4.7,reviews:31000,address:"CH Baktawar Singh Rd, Gurugram 122001",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Medanta+Hospital+Gurugram"}],
+    hyderabad:[{name:"Asian Institute of Gastroenterology",subtitle:"Premier GI Hospital India",rating:4.8,reviews:12000,address:"6-3-661, Somajiguda, Hyderabad 500082",hours:"Mon–Sat: 8 AM–8 PM",type:"hospital",map:"https://maps.google.com/?q=Asian+Institute+Gastroenterology+Hyderabad"},{name:"Yashoda Hospitals – GI",subtitle:"Gastroenterology Dept",rating:4.5,reviews:20000,address:"Raj Bhavan Rd, Somajiguda, Hyderabad",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Yashoda+Hospital+Hyderabad"}],
+  },
+  "Pulmonology":{
+    vellore:[{name:"CMC Vellore – Pulmonology",subtitle:"Chest Medicine & Respiratory",rating:4.8,reviews:892,address:"IDA Scudder Rd, Vellore 632004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=CMC+Hospital+Vellore"}],
+    chennai:[{name:"Apollo Hospitals – Pulmonology",subtitle:"Respiratory Medicine & Sleep Lab",rating:4.7,reviews:55315,address:"21 Greams Rd, Chennai 600006",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Chennai"},{name:"Government Chest Hospital",subtitle:"Govt · Respiratory Specialist",rating:4.0,reviews:5000,address:"Chetpet, Chennai 600031",hours:"Mon–Sat: 8 AM–4 PM",type:"hospital",map:"https://maps.google.com/?q=Government+Chest+Hospital+Chennai"}],
+    bangalore:[{name:"Aster CMI – Pulmonology",subtitle:"Chest & Respiratory Medicine",rating:4.6,reviews:12000,address:"New Airport Rd, Hebbal, Bangalore 560092",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Aster+CMI+Hospital+Bangalore"}],
+    mumbai:[{name:"PD Hinduja – Pulmonology",subtitle:"Respiratory Medicine",rating:4.5,reviews:18000,address:"Veer Savarkar Marg, Mahim, Mumbai 400016",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Hinduja+Hospital+Mumbai"}],
+    delhi:[{name:"AIIMS – Pulmonary Medicine",subtitle:"Pulmonary & Critical Care",rating:4.7,reviews:18000,address:"Sri Aurobindo Marg, New Delhi 110029",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=AIIMS+Delhi"}],
+    hyderabad:[{name:"KIMS Hospital – Pulmonology",subtitle:"Respiratory Medicine",rating:4.5,reviews:28000,address:"Minister Rd, Secunderabad 500003",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=KIMS+Hospital+Hyderabad"}],
+  },
+  "Infectious Disease":{
+    vellore:[{name:"CMC Vellore – Infectious Diseases",subtitle:"Tropical Medicine Dept",rating:4.8,reviews:892,address:"IDA Scudder Rd, Vellore 632004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=CMC+Hospital+Vellore"},{name:"Naruvi Hospitals",subtitle:"24/7 Emergency & Gen Medicine",rating:4.6,reviews:5290,address:"72, Collector's Office Rd, Vellore 632004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Naruvi+Hospitals+Vellore"}],
+    chennai:[{name:"Rajiv Gandhi Govt General Hospital",subtitle:"Infectious Disease & Gen Med",rating:4.0,reviews:14000,address:"Park Town, Chennai 600003",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Rajiv+Gandhi+Government+General+Hospital+Chennai"},{name:"Apollo – Infectious Disease Dept",subtitle:"Infection Control & Tropical Med",rating:4.7,reviews:55315,address:"21 Greams Rd, Chennai 600006",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Chennai"}],
+    bangalore:[{name:"Manipal Hospital – Internal Med",subtitle:"Infectious Disease Dept",rating:4.6,reviews:42000,address:"HAL Old Airport Rd, Bangalore 560017",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Manipal+Hospital+Bangalore"}],
+    mumbai:[{name:"Kasturba Hospital for Infectious Diseases",subtitle:"Govt · Infectious Disease Specialist",rating:3.8,reviews:5000,address:"Sane Guruji Marg, Chinchpokli, Mumbai 400011",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Kasturba+Hospital+Mumbai"}],
+    delhi:[{name:"AIIMS – Medicine & Infectious Dis",subtitle:"Infectious Disease Dept",rating:4.7,reviews:18000,address:"Sri Aurobindo Marg, New Delhi 110029",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=AIIMS+Delhi"}],
+    hyderabad:[{name:"Apollo Hospitals – Internal Medicine",subtitle:"Tropical & Infectious Disease",rating:4.6,reviews:38000,address:"Jubilee Hills, Hyderabad 500033",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Hyderabad"}],
+    kolkata:[{name:"Infectious Diseases Hospital",subtitle:"Govt · Infectious Disease Only",rating:3.7,reviews:4000,address:"ID Hospital Rd, Beliaghata, Kolkata 700010",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=ID+Hospital+Beliaghata+Kolkata"}],
+  },
+  "Allergy & Immunology":{
+    vellore:[{name:"CMC Vellore – Allergy Clinic",subtitle:"Allergy & Immunology Dept",rating:4.8,reviews:892,address:"IDA Scudder Rd, Vellore 632004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=CMC+Hospital+Vellore"},{name:"Vellore ENT & Allergy Centre",subtitle:"Dr. Fayaz · ENT & Allergy",rating:3.7,reviews:216,address:"1315, South Ave Rd, Sathuvachari, Vellore 632009",hours:"Mon–Sat: 8 AM–8:30 PM",type:"doctor",map:"https://maps.google.com/?q=Vellore+Speciality+Centre+Sathuvachari"}],
+    chennai:[{name:"Apollo – Allergy & Immunology",subtitle:"Allergy, Asthma & Immunology",rating:4.7,reviews:55315,address:"21 Greams Rd, Chennai 600006",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Chennai"}],
+    bangalore:[{name:"Manipal Hospital – Allergy",subtitle:"Allergy & Immunology Dept",rating:4.6,reviews:42000,address:"HAL Old Airport Rd, Bangalore 560017",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Manipal+Hospital+Bangalore"}],
+    mumbai:[{name:"PD Hinduja – Allergy Dept",subtitle:"Allergy & Clinical Immunology",rating:4.5,reviews:18000,address:"Veer Savarkar Marg, Mahim, Mumbai 400016",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Hinduja+Hospital+Mumbai"}],
+    delhi:[{name:"AIIMS – Allergy & Immunology",subtitle:"Clinical Immunology Dept",rating:4.7,reviews:18000,address:"Sri Aurobindo Marg, New Delhi 110029",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=AIIMS+Delhi"},{name:"Max Hospital – Allergy",subtitle:"Allergy & Clinical Immunology",rating:4.6,reviews:35000,address:"Press Enclave Marg, Saket, New Delhi 110017",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Max+Hospital+Saket+Delhi"}],
+    hyderabad:[{name:"Apollo Hospitals – Allergy",subtitle:"Allergy & Immunology",rating:4.6,reviews:38000,address:"Jubilee Hills, Hyderabad 500033",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Hyderabad"}],
+  },
+  "Rheumatology":{
+    vellore:[{name:"CMC Vellore – Rheumatology",subtitle:"Rheumatology & Clinical Immunology",rating:4.8,reviews:892,address:"IDA Scudder Rd, Vellore 632004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=CMC+Hospital+Vellore"},{name:"Nalam Medical Center",subtitle:"Ortho & Rheumatology",rating:3.6,reviews:415,address:"44, Arcot Road, Sathuvachari, Vellore 632009",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Nalam+Medical+Center+Vellore"}],
+    chennai:[{name:"MIOT International – Rheumatology",subtitle:"Orthopaedics & Rheumatology",rating:4.6,reviews:19000,address:"Mount Poonamallee Rd, Chennai 600089",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=MIOT+International+Chennai"},{name:"Apollo – Rheumatology",subtitle:"Rheumatology Dept",rating:4.7,reviews:55315,address:"21 Greams Rd, Chennai 600006",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Apollo+Hospitals+Chennai"}],
+    bangalore:[{name:"Fortis Hospital – Rheumatology",subtitle:"Bone, Joint & Arthritis Dept",rating:4.5,reviews:28000,address:"Bannerghatta Rd, Bangalore 560076",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Fortis+Hospital+Bangalore"},{name:"St. John's Medical College",subtitle:"Rheumatology & Immunology",rating:4.5,reviews:7000,address:"Sarjapur Rd, Koramangala, Bangalore 560034",hours:"Mon–Sat: 8 AM–5 PM",type:"hospital",map:"https://maps.google.com/?q=St+Johns+Medical+College+Bangalore"}],
+    mumbai:[{name:"Hinduja Hospital – Rheumatology",subtitle:"Rheumatology & Clinical Immuno",rating:4.5,reviews:18000,address:"Veer Savarkar Marg, Mahim, Mumbai 400016",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Hinduja+Hospital+Mumbai"}],
+    delhi:[{name:"AIIMS – Rheumatology",subtitle:"Clinical Immunology & Rheumatol",rating:4.7,reviews:18000,address:"Sri Aurobindo Marg, New Delhi 110029",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=AIIMS+Delhi"}],
+    hyderabad:[{name:"CARE Hospitals – Rheumatology",subtitle:"Arthritis & Rheumatology Dept",rating:4.6,reviews:21000,address:"Exhibition Rd, Nampally, Hyderabad 500001",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=CARE+Hospitals+Hyderabad"}],
+    pune:[{name:"Deenanath Mangeshkar – Rheumatology",subtitle:"Arthritis & Joint Care",rating:4.6,reviews:16000,address:"Erandwane, Pune 411004",hours:"Open 24 Hours",type:"hospital",map:"https://maps.google.com/?q=Deenanath+Mangeshkar+Hospital+Pune"}],
+  },
+};
+
+const CITY_MAP = {
+  vellore:["vellore","velore"],chennai:["chennai","madras"],bangalore:["bangalore","bengaluru"],
+  mumbai:["mumbai","bombay"],delhi:["delhi","new delhi","ncr"],hyderabad:["hyderabad"],
+  kolkata:["kolkata","calcutta"],pune:["pune","poona"],ahmedabad:["ahmedabad","amdavad"],
+  kochi:["kochi","cochin","ernakulam"],jaipur:["jaipur"],lucknow:["lucknow"],
+  coimbatore:["coimbatore","kovai"],nagpur:["nagpur"],chandigarh:["chandigarh","mohali"],
+  patna:["patna"],indore:["indore"],surat:["surat"],bhopal:["bhopal"],
+  visakhapatnam:["visakhapatnam","vizag"],
+};
+
+let BOOKINGS = [
+  {id:"BK001",name:"Ananya Krishnan",mobile:"9876543210",age:34,sex:"Female",condition:"Common Cold",provider:"Apollo Hospitals Chennai",date:"2026-02-22",time:"10:00 AM",status:"confirmed",city:"Chennai"},
+  {id:"BK002",name:"Ravi Subramaniam",mobile:"9123456780",age:52,sex:"Male",condition:"Cardiac Issue",provider:"CMC Vellore",date:"2026-02-23",time:"9:00 AM",status:"confirmed",city:"Vellore"},
+  {id:"BK003",name:"Priya Menon",mobile:"8765432190",age:27,sex:"Female",condition:"Migraine",provider:"NIMHANS Bangalore",date:"2026-02-24",time:"11:00 AM",status:"pending",city:"Bangalore"},
+  {id:"BK004",name:"Karthik Rajesh",mobile:"7654321890",age:19,sex:"Male",condition:"Dengue Fever",provider:"Apollo Hospitals Hyderabad",date:"2026-02-25",time:"3:00 PM",status:"confirmed",city:"Hyderabad"},
+  {id:"BK005",name:"Deepa Natarajan",mobile:"9988776655",age:45,sex:"Female",condition:"Arthritis",provider:"Medanta Gurugram",date:"2026-02-26",time:"2:00 PM",status:"pending",city:"Delhi"},
+];
+
+// ══════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════
+let state = {
+  screen: 'login', role: 'user',
+  profile: {name:'',mobile:'',age:'',sex:''},
+  city: '', selectedSymptoms: [], diagnosis: null, providers: [], selectedProvider: null,
+};
+
+// ══════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  state.screen = id;
+  renderTopbar();
+}
+
+function goBack(to) { showScreen(to); }
+function goToCity() { showScreen('location'); }
+function goToSymptoms() { showScreen('symptoms'); renderSymptoms(); }
+
+// ══════════════════════════════════════════════════════════════════════════
+// TOPBAR
+// ══════════════════════════════════════════════════════════════════════════
+const STEPS = ['location','symptoms','result','booking','confirmed'];
+function renderTopbar() {
+  const r = document.getElementById('topbar-right');
+  let html = '';
+  if (state.city && !['login','admin'].includes(state.screen))
+    html += `<div class="city-badge">📍 ${state.city}</div>`;
+  if (!['login','admin'].includes(state.screen)) {
+    const ci = STEPS.indexOf(state.screen === 'analyzing' ? 'symptoms' : state.screen);
+    html += `<div class="progress-dots">${STEPS.map((s,i) => `<div class="pdot ${i<ci?'done':i===ci?'active':''}"></div>`).join('')}</div>`;
+  }
+  if (state.screen === 'admin')
+    html += `<div class="admin-badge">🛡 Admin Panel</div>`;
+  if (state.profile.name || state.screen === 'admin')
+    html += `<div class="user-pill" onclick="resetAll()">
+      <div class="user-avatar ${state.screen==='admin'?'admin':''}">${state.screen==='admin'?'A':state.profile.name.charAt(0).toUpperCase()}</div>
+      <span class="user-name">${state.screen==='admin'?'Admin':state.profile.name.split(' ')[0]}</span>
+      <span class="user-logout">· Logout</span>
+    </div>`;
+  r.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// EMAIL
+// ══════════════════════════════════════════════════════════════════════════
+function initEJ() {
+  try { emailjs.init(EJ_KEY); } catch(e) {}
+}
+
+async function sendEmail(params) {
+  try {
+    await emailjs.send(EJ_SERVICE, EJ_TEMPLATE, params);
+    return true;
+  } catch(e) {
+    console.error('EmailJS error:', e);
+    return false;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════════════════════
+function switchRole(role) {
+  state.role = role;
+  document.getElementById('form-user').style.display = role === 'user' ? 'block' : 'none';
+  document.getElementById('form-admin').style.display = role === 'admin' ? 'block' : 'none';
+  document.getElementById('tab-user').className = 'role-tab' + (role==='user'?' user-active':'');
+  document.getElementById('tab-admin').className = 'role-tab' + (role==='admin'?' admin-active':'');
+}
+
+function selectSex(s) {
+  state.profile.sex = s;
+  document.querySelectorAll('.sex-pill').forEach((el,i) => {
+    el.classList.toggle('on', ['Male','Female','Other'][i] === s);
+  });
+  document.getElementById('err-sex').style.display = 'none';
+}
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+  document.getElementById(id.replace('err-','inp-'))?.classList.add('err');
+}
+function clearErr(id) {
+  document.getElementById(id).style.display = 'none';
+  document.getElementById(id.replace('err-','inp-'))?.classList.remove('err');
+}
+
+async function doLogin() {
+  const name = document.getElementById('inp-name').value.trim();
+  const mobile = document.getElementById('inp-mobile').value.trim();
+  const age = document.getElementById('inp-age').value;
+  const sex = state.profile.sex;
+  let valid = true;
+  ['err-name','err-mobile','err-age','err-sex'].forEach(clearErr);
+  if (!name) { showErr('err-name','Please enter your full name.'); valid=false; }
+  if (!/^[6-9]\d{9}$/.test(mobile)) { showErr('err-mobile','Enter a valid 10-digit Indian mobile number.'); valid=false; }
+  if (!age || age<1 || age>120) { showErr('err-age','Enter a valid age (1–120).'); valid=false; }
+  if (!sex) { showErr('err-sex','Please select your sex.'); valid=false; }
+  if (!valid) return;
+  state.profile = {name, mobile, age, sex};
+  showToast('Creating your account…','info');
+  const ok = await sendEmail({
+    patient: name, mobile: '+91 '+mobile, age_sex: age+'y · '+sex,
+    city: 'Not set yet', date:'— (New Signup)', time:'—',
+    provider:'New User Registration', address:'N/A',
+  });
+  showToast(ok ? `Welcome ${name.split(' ')[0]}! Admin notified via email.` : `Welcome ${name.split(' ')[0]}! Account created.`, 'success');
+  document.getElementById('loc-name').textContent = name.split(' ')[0];
+  renderCityChips();
+  showScreen('location');
+}
+
+function doAdminLogin() {
+  const mob = document.getElementById('inp-admin-mob').value.trim();
+  const errEl = document.getElementById('err-admin');
+  if (mob === ADMIN_MOBILE) {
+    errEl.style.display = 'none';
+    renderAdmin();
+    showScreen('admin');
+  } else {
+    errEl.style.display = 'block';
+    errEl.querySelector('span:last-child').textContent = 'Access denied. This mobile number is not authorised as admin.';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CITY
+// ══════════════════════════════════════════════════════════════════════════
+function renderCityChips() {
+  document.getElementById('city-chips').innerHTML = POPULAR_CITIES.map(c =>
+    `<div class="city-chip" onclick="pickCity('${c}')">${c}</div>`
+  ).join('');
+}
+
+function pickCity(c) {
+  document.getElementById('inp-city').value = c;
+  state.city = c;
+  showCityConfirmed();
+}
+
+function confirmCity() {
+  const c = document.getElementById('inp-city').value.trim();
+  if (!c) return;
+  state.city = c;
+  showCityConfirmed();
+}
+
+function showCityConfirmed() {
+  document.getElementById('city-input-wrap').style.display = 'none';
+  document.getElementById('city-confirmed-wrap').style.display = 'block';
+  document.getElementById('city-confirm-name').textContent = state.city;
+}
+
+function resetCity() {
+  document.getElementById('city-input-wrap').style.display = 'block';
+  document.getElementById('city-confirmed-wrap').style.display = 'none';
+  document.getElementById('inp-city').value = '';
+  state.city = '';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SYMPTOMS
+// ══════════════════════════════════════════════════════════════════════════
+function renderSymptoms() {
+  document.getElementById('sym-city').textContent = state.city;
+  document.getElementById('sym-city2').textContent = state.city;
+  document.getElementById('sym-profile').textContent = `👤 ${state.profile.name} · ${state.profile.age}y · ${state.profile.sex}`;
+  document.getElementById('symptom-chips').innerHTML = SYMPTOMS.map(s =>
+    `<div class="chip ${state.selectedSymptoms.includes(s)?'on':''}" onclick="toggleSym('${s}')">${state.selectedSymptoms.includes(s)?'✓ ':''}${s}</div>`
+  ).join('');
+  updateSymCount();
+}
+
+function toggleSym(s) {
+  if (state.selectedSymptoms.includes(s))
+    state.selectedSymptoms = state.selectedSymptoms.filter(x => x !== s);
+  else
+    state.selectedSymptoms.push(s);
+  renderSymptoms();
+}
+
+function updateSymCount() {
+  const n = state.selectedSymptoms.length;
+  document.getElementById('sym-count').textContent = n === 0 ? 'Select at least one symptom' : `${n} symptom${n>1?'s':''} selected`;
+  document.getElementById('btn-analyze').disabled = n === 0;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ANALYZE
+// ══════════════════════════════════════════════════════════════════════════
+function normalizeCity(input) {
+  const s = (input||'').trim().toLowerCase();
+  for (const [key, variants] of Object.entries(CITY_MAP))
+    if (variants.some(v => s.includes(v) || v.includes(s))) return key;
+  return null;
+}
+
+function lookupProviders(specialty, cityInput) {
+  const ck = normalizeCity(cityInput);
+  const spec = PROVIDERS[specialty] || PROVIDERS['General Practice'];
+  if (ck && spec[ck] && spec[ck].length) return spec[ck];
+  const all = Object.values(spec).flat();
+  if (all.length) return all.slice(0, 8);
+  const gp = PROVIDERS['General Practice'];
+  if (ck && gp[ck]) return gp[ck];
+  return Object.values(gp).flat().slice(0, 8);
+}
+
+function analyze() {
+  if (!state.selectedSymptoms.length) return;
+  showScreen('analyzing');
+  document.getElementById('ana-city').textContent = state.city;
+  const steps = ['Pattern Recognition','Diagnosing Condition','Loading Providers'];
+  document.getElementById('ana-steps').innerHTML = steps.map(t =>
+    `<div class="dm" style="font-size:12px;color:rgba(240,244,248,.3);display:flex;align-items:center;gap:5px;transition:color .4s" id="astep-${t.replace(/ /g,'')}">${t}</div>`
+  ).join('');
+  let p = 0;
+  const iv = setInterval(() => {
+    p += Math.random()*14+5;
+    if (p >= 100) {
+      p = 100; clearInterval(iv);
+      const scored = DISEASE_MAP.map(d => ({
+        ...d, score: d.symptoms.filter(s => state.selectedSymptoms.includes(s)).length / Math.max(d.symptoms.length, state.selectedSymptoms.length)
+      })).sort((a,b) => b.score - a.score);
+      state.diagnosis = scored[0];
+      state.providers = lookupProviders(state.diagnosis.specialty, state.city);
+      setTimeout(() => { renderResult(); showScreen('result'); }, 400);
+    }
+    document.getElementById('prog-fill').style.width = Math.min(p,100)+'%';
+    document.getElementById('prog-pct').textContent = Math.round(Math.min(p,100))+'%';
+    steps.forEach((t,i) => {
+      const el = document.getElementById('astep-'+t.replace(/ /g,''));
+      if (el) el.style.color = p > i*33 ? '#7dd3fc' : 'rgba(240,244,248,.3)';
+      if (el) el.textContent = (p > i*33 ? '✓ ' : '○ ') + t;
+    });
+  }, 100);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// RESULT
+// ══════════════════════════════════════════════════════════════════════════
+function renderResult() {
+  const d = state.diagnosis;
+  document.getElementById('res-city').textContent = state.city;
+  document.getElementById('res-profile').textContent = `👤 ${state.profile.name} · ${state.profile.age}y · ${state.profile.sex}`;
+  document.getElementById('prov-count').textContent = `${state.providers.length} HOSPITALS / DOCTORS FOUND`;
+  document.getElementById('prov-city-label').textContent = `📍 In & around ${state.city}`;
+  document.getElementById('dx-card').innerHTML = `
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="font-size:50px">${d.icon}</div>
+      <div style="flex:1;min-width:180px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap">
+          <h2 style="font-size:24px;font-weight:900;color:#fff">${d.disease}</h2>
+          <span class="dm" style="font-size:10px;padding:3px 10px;border-radius:50px;border:1px solid ${SEV_COLOR[d.severity]};color:${SEV_COLOR[d.severity]};letter-spacing:1px">${d.severity.toUpperCase()}</span>
+        </div>
+        <p class="dm" style="color:rgba(240,244,248,.65);font-size:14px;margin-bottom:9px;line-height:1.7">${d.description}</p>
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+          <div><div class="dm" style="font-size:10px;color:rgba(240,244,248,.4);letter-spacing:1px;margin-bottom:3px">SPECIALIST NEEDED</div><div class="dm" style="color:var(--gold);font-size:13px">🏥 ${d.specialty}</div></div>
+          <div><div class="dm" style="font-size:10px;color:rgba(240,244,248,.4);letter-spacing:1px;margin-bottom:3px">YOUR SYMPTOMS</div><div class="dm" style="color:#fff;font-size:13px">${d.symptoms.filter(s => state.selectedSymptoms.includes(s)).join(', ')||'General match'}</div></div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('provider-cards').innerHTML = state.providers.map((p,i) => `
+    <div class="card card-hover" style="padding:18px" onclick="selectProvider(${i})">
+      <div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+        <span class="${p.type==='hospital'?'tag-h':'tag-d'}">${p.type==='hospital'?'🏥 Hospital':'👨‍⚕️ Clinic/Doctor'}</span>
+        <span class="tag-ok">● Active</span>
+      </div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:3px;line-height:1.3;color:#fff">${p.name}</div>
+      <div class="dm" style="font-size:12px;color:rgba(240,244,248,.5);margin-bottom:7px">${p.subtitle}</div>
+      <div class="dm" style="font-size:12px;color:rgba(240,244,248,.45);margin-bottom:3px">📍 ${p.address}</div>
+      <div class="dm" style="font-size:12px;color:rgba(240,244,248,.45);margin-bottom:10px">🕐 ${p.hours}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:9px;border-top:1px solid rgba(255,255,255,.05)">
+        <div style="display:flex;align-items:center;gap:5px">
+          <span class="dm" style="font-size:13px;color:var(--gold)">★ ${p.rating}</span>
+          <span class="dm" style="font-size:11px;color:rgba(240,244,248,.4)">(${p.reviews.toLocaleString()})</span>
+        </div>
+        <div style="display:flex;gap:7px;align-items:center">
+          <a href="${p.map}" target="_blank" class="btn-map" onclick="event.stopPropagation()">🗺 Map</a>
+          <span class="dm" style="font-size:12px;color:var(--gold)">Book →</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function selectProvider(i) {
+  state.selectedProvider = state.providers[i];
+  renderBooking();
+  showScreen('booking');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// BOOKING
+// ══════════════════════════════════════════════════════════════════════════
+function renderBooking() {
+  const p = state.selectedProvider;
+  const d = state.diagnosis;
+  document.getElementById('book-prov-card').innerHTML = `
+    <div style="display:flex;gap:5px;margin-bottom:9px;flex-wrap:wrap;align-items:center">
+      <span class="${p.type==='hospital'?'tag-h':'tag-d'}">${p.type==='hospital'?'🏥 Hospital':'👨‍⚕️ Clinic'}</span>
+      <span class="tag-ok">● Active</span>
+    </div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:3px;color:#fff">${p.name}</div>
+    <div class="dm" style="font-size:12px;color:rgba(240,244,248,.5);margin-bottom:4px">${p.subtitle}</div>
+    <div class="dm" style="font-size:12px;color:rgba(240,244,248,.5);margin-bottom:3px">📍 ${p.address}</div>
+    <div class="dm" style="font-size:12px;color:rgba(240,244,248,.5);margin-bottom:11px">🕐 ${p.hours}</div>
+    <a href="${p.map}" target="_blank" class="btn-map">🗺 Open in Google Maps</a>`;
+  document.getElementById('book-patient-info').innerHTML = [
+    ['Name',state.profile.name],['Mobile','+91 '+state.profile.mobile],['Age / Sex',`${state.profile.age}y · ${state.profile.sex}`]
+  ].map(([l,v]) => `<div><div class="label">${l}</div><div class="dm" style="font-size:13px;color:#fff">${v}</div></div>`).join('');
+  document.getElementById('book-summary').innerHTML = `
+    <div class="label mb-12">Appointment Summary</div>
+    ${[['Patient',state.profile.name],['Mobile','+91 '+state.profile.mobile],['Age/Sex',`${state.profile.age}y · ${state.profile.sex}`],['City',state.city],['Condition',d?.disease||''],['Specialist',d?.specialty||''],['Provider',p.name],['Address',p.address],['Hours',p.hours],['Rating','★ '+p.rating]]
+      .map(([l,v]) => `<div style="display:flex;justify-content:space-between;padding-bottom:7px;margin-bottom:7px;border-bottom:1px solid rgba(255,255,255,.05)"><span class="dm" style="font-size:12px;color:rgba(240,244,248,.4);flex-shrink:0;margin-right:8px">${l}</span><span class="dm" style="font-size:12px;color:#fff;text-align:right">${v}</span></div>`).join('')}`;
+  document.getElementById('inp-date').value = '';
+  document.getElementById('inp-time').value = '';
+  document.getElementById('inp-note').value = '';
+  document.getElementById('btn-confirm-book').disabled = true;
+  ['inp-date','inp-time'].forEach(id => document.getElementById(id).addEventListener('change', checkBookReady));
+}
+
+function checkBookReady() {
+  const d = document.getElementById('inp-date').value;
+  const t = document.getElementById('inp-time').value;
+  document.getElementById('btn-confirm-book').disabled = !d || !t;
+}
+
+async function confirmBooking() {
+  const date = document.getElementById('inp-date').value;
+  const time = document.getElementById('inp-time').value;
+  if (!date || !time) return;
+  const p = state.selectedProvider;
+  const bk = {
+    id: 'BK'+String(BOOKINGS.length+1).padStart(3,'0'),
+    name: state.profile.name, mobile: state.profile.mobile,
+    age: state.profile.age, sex: state.profile.sex,
+    condition: state.diagnosis?.disease||'', provider: p.name,
+    date, time, status:'pending', city: state.city,
+  };
+  BOOKINGS.unshift(bk);
+  showToast('Booking saved! Sending email…','info');
+  const ok = await sendEmail({
+    patient: state.profile.name,
+    mobile: '+91 ' + state.profile.mobile,
+    age_sex: state.profile.age + 'y · ' + state.profile.sex,
+    city: state.city, date, time,
+    provider: p.name, address: p.address,
+  });
+  if (ok) showToast('📧 Booking receipt sent to pranav27062007@gmail.com!','success');
+  else showToast('Booking confirmed! (Email may be delayed)','info');
+  renderConfirmed(p, date, time);
+  showScreen('confirmed');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CONFIRMED
+// ══════════════════════════════════════════════════════════════════════════
+function renderConfirmed(p, date, time) {
+  document.getElementById('conf-prov').textContent = p.name;
+  document.getElementById('conf-map-link').href = p.map;
+  document.getElementById('conf-receipt').innerHTML = [
+    ['👤 Patient',state.profile.name],['📞 Mobile','+91 '+state.profile.mobile],
+    ['🎂 Age/Sex',`${state.profile.age}y · ${state.profile.sex}`],['🌏 City',state.city],
+    ['🗓 Date',date],['🕐 Time',time],['🏥 Provider',p.name],['📍 Address',p.address],
+  ].map(([l,v]) => `<div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start"><span class="dm" style="font-size:12px;color:rgba(240,244,248,.5);min-width:94px;flex-shrink:0">${l}</span><span class="dm" style="font-size:13px;color:#fff;line-height:1.5">${v}</span></div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════════════════════════════════════════
+function renderAdmin() {
+  renderAdminStats(); renderAdminBookings(); renderAdminCharts();
+}
+
+function renderAdminStats() {
+  const confirmed = BOOKINGS.filter(b=>b.status==='confirmed').length;
+  const pending = BOOKINGS.filter(b=>b.status==='pending').length;
+  const cities = new Set(BOOKINGS.map(b=>b.city)).size;
+  document.getElementById('admin-stats').innerHTML = [
+    {l:'Total Bookings',v:BOOKINGS.length,c:'var(--gold)',i:'📅'},
+    {l:'Confirmed',v:confirmed,c:'var(--green)',i:'✅'},
+    {l:'Pending',v:pending,c:'var(--amber)',i:'⏳'},
+    {l:'Cities',v:cities,c:'var(--blue)',i:'🌏'},
+  ].map(s => `<div class="card card-pad" style="text-align:center">
+    <div style="font-size:28px;margin-bottom:6px">${s.i}</div>
+    <div style="font-size:28px;font-weight:900;color:${s.c};margin-bottom:4px;font-family:'Playfair Display',serif">${s.v}</div>
+    <div class="dm" style="font-size:12px;color:rgba(240,244,248,.5)">${s.l}</div>
+  </div>`).join('');
+}
+
+function renderAdminBookings() {
+  document.getElementById('admin-bookings-view').innerHTML = `<div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>ID</th><th>Patient</th><th>Mobile</th><th>Age/Sex</th><th>City</th><th>Condition</th><th>Provider</th><th>Date & Time</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>${BOOKINGS.map(b => {
+      const icon = DISEASE_MAP.find(d=>d.disease===b.condition)?.icon||'🔬';
+      return `<tr>
+        <td><span class="dm" style="font-size:11px;color:var(--gold)">${b.id}</span></td>
+        <td>${b.name}</td><td>${b.mobile}</td>
+        <td>${b.age}y · ${b.sex}</td>
+        <td><span style="color:#7dd3fc;font-size:12px">📍 ${b.city||'—'}</span></td>
+        <td><span style="font-size:12px">${icon} ${b.condition}</span></td>
+        <td><span style="font-size:12px;color:rgba(240,244,248,.7)">${b.provider}</span></td>
+        <td><span style="font-size:12px">${b.date}<br><span style="color:rgba(240,244,248,.5)">${b.time}</span></span></td>
+        <td><span class="${b.status==='confirmed'?'status-c':'status-p'}">${b.status}</span></td>
+        <td><button class="btn-sm btn-outline" onclick="toggleStatus('${b.id}')">Toggle</button></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function toggleStatus(id) {
+  const bk = BOOKINGS.find(b=>b.id===id);
+  if (bk) {
+    bk.status = bk.status === 'confirmed' ? 'pending' : 'confirmed';
+    renderAdmin();
+  }
+}
+
+function switchAdminTab(t) {
+  document.getElementById('atab-bookings').className = 'admin-tab' + (t==='bookings'?' on':'');
+  document.getElementById('atab-stats').className = 'admin-tab' + (t==='stats'?' on':'');
+  document.getElementById('admin-bookings-view').style.display = t==='bookings'?'block':'none';
+  document.getElementById('admin-stats-view').style.display = t==='stats'?'block':'none';
+}
+
+function renderAdminCharts() {
+  const conds = {};
+  BOOKINGS.forEach(b => { conds[b.condition] = (conds[b.condition]||0) + 1; });
+  document.getElementById('admin-stats-view').innerHTML = `
+    <div class="card card-pad">
+      <div class="label mb-16">Conditions Overview</div>
+      ${Object.entries(conds).map(([c, count]) => `
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px" class="dm">
+            <span>${c}</span><span>${count} booking(s)</span>
+          </div>
+          <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${(count/BOOKINGS.length)*100}%"></div></div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════════════════
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  const item = document.createElement('div');
+  item.className = `toast-item ${type}`;
+  item.innerHTML = `<div class="toast-msg">${msg}</div><div class="toast-close" onclick="this.parentElement.remove()">×</div>`;
+  t.appendChild(item);
+  setTimeout(() => item.remove(), 4000);
+}
+
+function resetAll() {
+  state = {
+    screen: 'login', role: 'user',
+    profile: {name:'',mobile:'',age:'',sex:''},
+    city: '', selectedSymptoms: [], diagnosis: null, providers: [], selectedProvider: null,
+  };
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-mobile').value = '';
+  document.getElementById('inp-age').value = '';
+  document.querySelectorAll('.sex-pill').forEach(el => el.classList.remove('on'));
+  resetCity();
+  switchRole('user');
+  showScreen('login');
+}
+
+window.onload = function() {
+  initEJ();
+};
+</script>
+</body>
+</html>
